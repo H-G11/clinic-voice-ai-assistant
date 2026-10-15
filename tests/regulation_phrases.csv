@@ -1,0 +1,52 @@
+text,kind
+Боль в груди,emergency
+Давит за грудиной,emergency
+Жжёт в груди,emergency
+Отдаёт в левую руку,emergency
+Сердечный приступ,emergency
+Инфаркт,emergency
+Не может дышать,emergency
+Не могу дышать,emergency
+Задыхается,emergency
+Синеет,emergency
+Ребёнок посинел,emergency
+Подавился,emergency
+Потерял сознание,emergency
+Без сознания,emergency
+Не приходит в себя,emergency
+Не могу разбудить,emergency
+Перекосило лицо,emergency
+Отнялась рука,emergency
+Не может говорить,emergency
+Речь невнятная,emergency
+Онемела половина тела,emergency
+Судороги,emergency
+Припадок,emergency
+Сильное кровотечение,emergency
+Кровь не останавливается,emergency
+Рвота кровью,emergency
+Кровь изо рта,emergency
+Сильно ударился головой,emergency
+Упал с высоты,emergency
+Отравился,emergency
+Укусила змея,emergency
+Отёкает горло,emergency
+Не может глотать,emergency
+Анафилактический шок,emergency
+Младенец вялый не просыпается,emergency
+У грудного ребёнка температура,emergency
+Ребёнок проглотил,emergency
+Отошли воды,emergency
+Сильная боль в животе при беременности,emergency
+Не хочу жить,emergency
+Температура сорок,urgent
+Не помогает температура не сбивается,urgent
+Боль усиливается,urgent
+Резко поднялось давление,urgent
+Порезался глубоко,urgent
+Хочу пожаловаться,complaint
+Позовите оператора,operator
+Какие лекарства принимать,medical
+Хочу записаться в больницу,none
+Инфаркт в прошлом году,none
+Начать заново,none

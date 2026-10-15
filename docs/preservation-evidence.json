@@ -1,0 +1,120 @@
+{
+  "demo.sqlite3": {
+    "doctors": {
+      "rows_before": 3,
+      "rows_after": 3,
+      "unchanged": true
+    },
+    "slots": {
+      "rows_before": 720,
+      "rows_after": 720,
+      "unchanged": true
+    },
+    "calendar": {
+      "rows_before": 0,
+      "rows_after": 0,
+      "unchanged": true
+    },
+    "unavailability": {
+      "rows_before": 0,
+      "rows_after": 0,
+      "unchanged": true
+    },
+    "bookings": {
+      "rows_before": 3,
+      "rows_after": 3,
+      "unchanged": true
+    },
+    "mock_mis": {
+      "rows_before": 3,
+      "rows_after": 3,
+      "unchanged": true
+    },
+    "synthetic_patients": {
+      "rows_before": 0,
+      "rows_after": 0,
+      "unchanged": true
+    },
+    "patient_permissions": {
+      "rows_before": 0,
+      "rows_after": 0,
+      "unchanged": true
+    }
+  },
+  "clinic_demo.sqlite3": {
+    "doctors": {
+      "rows_before": 85,
+      "rows_after": 85,
+      "unchanged": true
+    },
+    "slots": {
+      "rows_before": 136973,
+      "rows_after": 136973,
+      "unchanged": true
+    },
+    "calendar": {
+      "rows_before": 16150,
+      "rows_after": 16150,
+      "unchanged": true
+    },
+    "unavailability": {
+      "rows_before": 135,
+      "rows_after": 135,
+      "unchanged": true
+    },
+    "bookings": {
+      "rows_before": 1,
+      "rows_after": 1,
+      "unchanged": false,
+      "changed_columns": [
+        "status"
+      ],
+      "status_transitions": [
+        {
+          "before": "confirmed",
+          "after": "cancelled"
+        }
+      ]
+    },
+    "mock_mis": {
+      "rows_before": 0,
+      "rows_after": 0,
+      "unchanged": true
+    },
+    "api_clients": {
+      "rows_before": 2,
+      "rows_after": 2,
+      "unchanged": true
+    },
+    "api_visits": {
+      "rows_before": 1,
+      "rows_after": 1,
+      "unchanged": false,
+      "changed_columns": [
+        "status",
+        "updated_at"
+      ],
+      "status_transitions": [
+        {
+          "before": "\u0417\u0430\u043f\u043b\u0430\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0430",
+          "after": "\u041e\u0442\u043c\u0435\u043d\u0435\u043d\u0430"
+        }
+      ]
+    },
+    "api_escalations": {
+      "rows_before": 0,
+      "rows_after": 0,
+      "unchanged": true
+    },
+    "synthetic_patients": {
+      "rows_before": 2,
+      "rows_after": 2,
+      "unchanged": true
+    },
+    "patient_permissions": {
+      "rows_before": 0,
+      "rows_after": 0,
+      "unchanged": true
+    }
+  }
+}
