@@ -271,6 +271,8 @@ class BookingService:
         try: result=self.mis.cancel(row['external_id'])
         except Exception: result=Result('uncertain',message='Отмена требует сверки')
         if not isinstance(result,Result) or result.kind not in ('ok','rejected','uncertain') or (result.kind=='ok' and not result.external_id): result=Result('uncertain')
+        if result.kind == 'ok' and str(result.external_id) != str(row['external_id']):
+            result = Result('uncertain', message='МИС подтвердила другой идентификатор; нужна сверка')
         status={'ok':'cancelled','rejected':'confirmed','uncertain':'uncertain'}[result.kind]
         try:
             with self.store.connect() as c: c.execute('UPDATE bookings SET status=? WHERE id=?',(status,booking_id))
@@ -302,6 +304,8 @@ class BookingService:
         try: result=self.mis.reschedule(old['external_id'],doctor_id,slot)
         except Exception: result=Result('uncertain',message='Перенос требует сверки')
         if not isinstance(result,Result) or result.kind not in ('ok','rejected','uncertain') or (result.kind=='ok' and not result.external_id): result=Result('uncertain')
+        if result.kind == 'ok' and str(result.external_id) != str(old['external_id']):
+            result = Result('uncertain', message='МИС подтвердила другой идентификатор; оба слота требуют сверки')
         try:
             with self.store.connect() as c:
                 c.execute('BEGIN IMMEDIATE')

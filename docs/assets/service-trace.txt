@@ -1,0 +1,11 @@
+LOCAL SERVICE DEMO | synthetic fixture | fixed clock | no speech or real MIS
+registration_without_consent      rejected     0.003 ms
+explicit_synthetic_registration   ok           3.611 ms
+create_after_reviewed_summary     ok           2.873 ms
+duplicate_booking                 rejected     0.919 ms
+status                            ok           0.892 ms
+move_without_consent              rejected     0.002 ms
+confirmed_move                    ok           2.713 ms
+cancel_without_consent            rejected     0.003 ms
+confirmed_cancel                  ok           1.505 ms
+VERIFIED: same visit ID after move; cancellation checked; both slots free

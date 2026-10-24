@@ -1,138 +1,88 @@
 # Clinic Voice AI Assistant
 
-A local prototype of a Russian-language clinic receptionist. It combines deterministic appointment dialogue, optional local speech recognition/synthesis, SQLite persistence and an in-process MIS simulator. It is intended for synthetic demonstrations and engineering evaluation.
+A local speech-driven appointment workflow prototype: deterministic dialogue, explicit consent, SQLite reservations and a simulated MIS. Built for synthetic demonstrations, not production patient handling.
 
-## Reproducible demonstration
+## Executed demonstration
 
-This service demo needs only Python 3.11+ and does not download models, import case data, open network sockets or touch the application database:
+![Actual local appointment service execution, rendered from captured stdout; not a Gradio screenshot](docs/assets/service-demo.svg)
+
+*Actual registration → booking → status → move → cancellation against the in-process simulator, including refused unconfirmed operations and duplicate rejection. Generated synthetic fixture; no real patient data or speech session.*
 
 ```bash
-python scripts/demo_local.py
+python scripts/demo_local.py --trace
 ```
 
-It actually executes separate registration consent, appointment creation, duplicate rejection, status, confirmed rescheduling with the same external ID, and confirmed cancellation. All identities and schedule rows are generated synthetic fixtures with a fixed clock. [Recorded output](docs/demo-service.json) was produced by this command; it demonstrates the service and simulator, not ASR, dialogue UI, telephony or a real MIS.
+<details>
+<summary>Recorded CLI execution replay — 11 seconds, not real-time UI or speech</summary>
 
-For an interactive demo, use the quickstart below and the [demo procedure](docs/demo_script.md). The [presentation](docs/presentation/clinic-voice-ai-pitch.pdf) contains the original concept and target figures, not deployment results.
+![Playback revealing actual captured service output; not an application screenshot or timing simulation](docs/assets/service-replay.gif)
 
-## Implemented features
+One recorded line is revealed per second. Playback speed is editorial, not measured execution speed. [Captured stdout, sources and regeneration](docs/assets/README.md).
 
-- A Gradio text/microphone interface with editable transcripts and manual identity/date/slot input.
-- Deterministic dialogue for a small generated schedule, plus a separate case-data flow with synthetic registration, appointment status, move and cancellation.
-- Confirmation before critical dialogue actions. Recognized voice agreement alone cannot authorize registration, booking, move or cancellation.
-- SQLite reservations and uniqueness constraints for pending/confirmed/uncertain slots; moves reserve the target before contacting the adapter. Unknown outcomes retain locks for reconciliation.
-- In-process mock REST operations, strict identity/response checks, local operator incident persistence and rule-based safety routing. Operator transfer is simulated.
-- Lazy faster-whisper ASR, optional local Piper TTS on supported platforms, and Windows SAPI fallback. Text remains available after speech errors.
+</details>
 
-## Limitations
+## Measured service behavior
 
-**No real MIS or telephony integration has been verified.** The UI refuses live mode. The RealMIS adapter has a mutation gate but still needs actual contract, doctor/client mapping and controlled integration tests. It must not be used as a production integration. SMS, outgoing reminders and telephone transfers are not implemented.
+![Measured local service median and p95 timings, with scope limitations](docs/assets/service-results.svg)
 
-Use only fictional identities and authorized synthetic data. The local administrative UI has no production authentication/access-control model; it exposes local demo records. Pending/uncertain operations require human reconciliation; there is no automatic recovery procedure or blind mutation retry. Incident persistence can fall back to process memory, which is lost at shutdown.
+30 sequential repetitions after 3 warmups on AMD Ryzen 7 7735H, 16 logical CPUs, Linux, Python 3.14.7. Create/move/cancel medians: **2.303 / 2.105 / 1.312 ms**. Measurements include the timed service's SQLite and in-process MIS work; exclude fixture construction, speech and HTTP. This is not end-to-end response latency or a production capacity result. [Raw samples and hardware](docs/assets/service-benchmark.json).
 
-The historical ASR comparison used 20 **Piper-generated** WAV files. Its results are not human microphone accuracy. Models/audio, original case Excel and source CSV exports are not included. Hardware speed and historical test results have not been reproduced here. Safety rules and fixture coverage do not establish clinical safety or complete language coverage.
-
-## Architecture
-
-```mermaid
-flowchart LR
-    UI[Local Gradio UI] --> D[Deterministic dialogue]
-    UI --> ASR[faster-whisper]
-    ASR --> Review[Transcript review and consent gate]
-    Review --> D
-    D --> Rules[Safety routing and validation]
-    Rules --> Service[BookingService]
-    Service --> DB[(SQLite reservations)]
-    Service --> Mock[Local MIS simulator]
-    Mock --> DB
-    Service --> Reply[Verified result or uncertainty]
-    Reply --> UI
-    Reply --> TTS[Local Piper / Windows SAPI]
+```bash
+python scripts/benchmark_service.py --repeats 30 --warmup 3 --output docs/assets/service-benchmark.json
 ```
 
-`core/service.py` owns appointment mutations. `core/dialog.py` preserves the small synthetic flow; `core/clinic_dialog.py` handles the case flow. `core/schedule.py` imports schedules, `core/api_simulator.py` provides the mock API, and `core/http_client.py` is a bounded transport with no automatic redirects/retries. [Architecture details](docs/architecture.md) and [contracts](docs/contracts.md) describe these boundaries.
+The old 123-PASS and synthetic ASR figures are historical author-supplied records. [Current verification](docs/verification.md) records actual counts and resource errors; no human ASR accuracy or live integration is inferred from them.
+
+## Architecture and state
+
+![Implemented UI, speech, dialogue, service, database and mock MIS boundaries](docs/assets/architecture.svg)
+
+- Deterministic dialogue and Pydantic-validated intent keep model output outside mutation authority. Recognized YES alone cannot authorize critical actions.
+- `BEGIN IMMEDIATE`, pending reservations and partial unique indexes protect concurrent local writers. Unknown outcomes retain locks; timeout does not justify retrying a mutation.
+- Rescheduling preserves the external visit ID. A cancel/move response naming a different visit stays uncertain.
+- Operator/safety routing responds before asynchronous incident persistence. The handoff is simulated, not a phone transfer.
+
+[Booking/move/cancel sequence diagrams, actual dialogue states, transaction boundaries and recovery tradeoffs](docs/workflows.md) · [Detailed contracts](docs/contracts.md).
 
 ## Quickstart
 
-Target Python: 3.11 or 3.12. Internet access is needed to install packages and explicitly download public speech models. CPU is the default speech device; CUDA is optional. This audit used Python 3.14.7 for the available offline checks; a complete clean installation remains unverified.
-
-Linux/macOS:
+Target Python 3.11/3.12. Core text mode needs no speech model; first installation needs network access.
 
 ```bash
+# Linux/macOS
 python3.11 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python -m pip check
 .venv/bin/python app.py
 ```
 
-Windows PowerShell:
-
 ```powershell
+# Windows PowerShell
 py -3.11 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m pip check
 .\.venv\Scripts\python.exe app.py
 ```
 
-Open `http://127.0.0.1:7860`. Without a case workbook, the app creates a three-doctor synthetic schedule and demonstrates **new bookings only**. Its legacy flow does not provide case-flow registration, cancellation or move; the service demo above covers those operations independently. No credentials are required for mock mode. `start_windows.bat` installs core/UI requirements and launches text mode; `start_windows.bat --check` runs the tests, whose full requirements are listed below.
+Open `http://127.0.0.1:7860`. Without a case workbook, the UI uses a three-doctor synthetic **new-booking-only** flow. The executed service demo above covers move/cancel independently; the full case dialogue needs an authorized synthetic workbook. [Interactive and voice setup](docs/quickstart.md).
 
-Configuration comes from process environment variables; `.env.example` documents them but `.env` files are **not loaded automatically**. Set variables in the shell (`export NAME=value` in Bash, `$env:NAME="value"` in PowerShell). Keep `MIS_MODE=mock`. ASR defaults to cached models only; `ASR_LOCAL_ONLY=1` prevents implicit model downloads.
+## Scope and limitations
 
-Optional speech (use the virtual-environment Python executable):
+The Gradio text/microphone interface, editable transcript, manual fields, local ASR/TTS adapters and appointment controller are implemented. An actual browser/speech demonstration remains **BLOCKED** here by missing dependencies/models and denied sockets. The visual replay above is the executed service, not an invented Gradio recording.
 
-```bash
-python -m pip install -r requirements-voice.txt -r requirements-tts.txt
-python scripts/download_asr_small.py
-python -m piper.download_voices ru_RU-irina-medium --data-dir data/models
-python app.py
-```
+Real MIS/telephony, SMS and outgoing reminders are unintegrated. UI live mode remains disabled. The local administrative panel is not an authenticated production console. Uncertain operations require human reconciliation; no automated recovery engine is claimed. Use only fictional identities and permitted synthetic case files. No medical advice or real operator connection is provided.
 
-`ASR_DEVICE=cpu` uses int8. `TTS_ENGINE=piper` selects the downloaded local voice; `auto` tries Piper and then SAPI on Windows; `DISABLE_TTS=1` disables speech output. Model and voice downloads, microphone capture, audibility and real ASR remain unverified in the current restricted environment. Review upstream model/voice terms before redistribution.
+Historical ASR comparisons used 20 Piper-generated WAVs, not human microphone recordings. [Original synthetic evaluation](docs/asr-results.md) · [Voice limitations](docs/voice-quality.md).
 
-### Optional case workbook
-
-Only use an authorized synthetic copy. Place exactly one workbook in `data/source/` with the seven sheets described in [contracts](docs/contracts.md), then run:
-
-```bash
-python scripts/import_clinic.py
-python app.py
-```
-
-The importer uses a separate `data/clinic_demo.sqlite3`, stores source hash/provenance and rejects replacing populated data with a different workbook. Availability uses GMT+4, a 14-calendar-day horizon including today, same-day 30-minute lead time, working calendar and absence rules. It never invents expired slots. The original case workbook is absent; historical doctor/slot counts are not reproduced audit results. See [API notes](docs/api-notes.md) for mock boundaries.
-
-## Verification
+## Verification and reproduction
 
 ```bash
 python -m pip install -r requirements.txt -r requirements-voice.txt -r requirements-dev.txt
-python -m pip check
 python -m unittest discover -s tests -v
 python scripts/demo_local.py
 python scripts/smoke_local.py
-python -m ruff check .
+python scripts/check_assets.py
 python scripts/check_format.py
-python -m bandit -r core app.py -lll
-python -m pip_audit --progress-spinner off
 ```
 
-ASR preprocessing tests need NumPy, PyAV and faster-whisper from the voice dependency group; model-backed tests skip without local models. Case integration tests need the authorized workbook/imported DB. HTTP tests need loopback sockets. Tests are not disabled to accommodate the audit environment.
+The service demo and new SQLite regressions run without third-party packages. Full discovery is not green in the current environment; dependencies, loopback sockets and some original fixtures are unavailable. Windows/Linux CI includes tests, safe asset checks, syntax/lint, HTTP smoke and dependency/security checks. Remote execution is pending. [Machine-readable results](docs/verification-results.json) · [Actual counts and publication blockers](docs/verification.md).
 
-**Current full discovery: 50 passed, 0 assertion failures, 11 errors, 13 skips.** The errors are missing dependencies/imports and a denied socket, so this is not a successful full-suite result. The original claim of 123 passing tests has not been reproduced. Details, baseline comparison and exact dependency availability: [verification](docs/verification.md), [machine-readable result](docs/verification-results.json).
-
-CI is configured for Windows/Linux Python 3.11/3.12, with separate dependency/security checks. YAML is locally parsed; remote jobs, Ruff, Bandit and dependency advisories have not run here. No passing CI badge or vulnerability-free claim is made.
-
-## Design decisions
-
-Appointment actions follow a deterministic controller rather than unconstrained LLM tool calls. Structured fields are checked against actual local slots, a fresh summary requires explicit consent, and service mutations enforce ownership and reservation rules. This makes refusals, timeouts and conflicts reproducible in tests.
-
-The tradeoff is limited language coverage and more clarification turns. `core/understanding.py` supports an optional validated, loopback-only Ollama parser; it cannot execute mutations and falls back to deterministic extraction on errors. Actual LLM inference has not been validated. Alternatives include a larger intent parser or LLM-assisted field extraction, while retaining the same service/consent boundary. Giving an LLM direct scheduling authority would require a different safety and evaluation model.
-
-SQLite `BEGIN IMMEDIATE` and partial unique indexes coordinate writers using the same database file. They do not prevent independent real-MIS clients from booking a slot. The HTTP budget is process-local, shared across reads/writes; a timeout does not prove a mutation failed. Unknown create/cancel/move outcomes remain blocked rather than being retried automatically.
-
-## Documentation and provenance
-
-- [Reproducible demo procedure](docs/demo_script.md)
-- [Verification and remaining blockers](docs/verification.md)
-- [Contracts](docs/contracts.md) · [Architecture](docs/architecture.md) · [API notes](docs/api-notes.md)
-- [Synthetic ASR results](docs/asr-results.md) · [Voice quality](docs/voice-quality.md)
-- [Historical AI-assisted development records](docs/provenance/README.md)
-
-The development missions and original author-supplied evidence are retained. AI involvement and existing Git history have not been removed. No project license is present; the owner must choose/confirm licensing before treating this as a reusable public distribution. Dependencies, models, voices and case material have separate terms.
+[Visual provenance](docs/assets/README.md) · [Demo procedure](docs/demo_script.md) · [Historical AI-assisted development records](docs/provenance/README.md). Existing authorship and history are preserved. Project, case-derived presentation and model/voice redistribution terms still require review.

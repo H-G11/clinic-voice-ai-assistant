@@ -7,6 +7,7 @@ import uuid
 from pathlib import Path
 os.environ.setdefault("GRADIO_ANALYTICS_ENABLED", "False")
 
+from core.presentation import schedule_presentation
 from core.store import Store
 from core.schedule import write_demo_excel, import_excel, import_clinic_excel
 from core.service import BookingService
@@ -39,7 +40,8 @@ svc = BookingService(store)
 
 import gradio as gr
 
-GREETING = 'Здравствуйте! Я виртуальный помощник регистратуры. Чем помочь: записаться, перенести приём, отменить запись или узнать её статус?'
+UI_COPY = schedule_presentation(store, svc.clinic_mode)
+GREETING = UI_COPY['greeting']
 DIALOGUE_QUEUE=dict(concurrency_id='dialogue',concurrency_limit=1)
 
 
@@ -262,7 +264,7 @@ with gr.Blocks(title="Голосовая регистратура — демо /
     gr.Markdown("# Голосовая регистратура — локальное демо")
     gr.Markdown('**ДЕМО — только вымышленные пациенты.** Настоящая МИС и телефонное соединение не подключены.')
     gr.Markdown('Скажите или напишите: **«Мне бы к хирургу в пятницу после обеда»**. Можно исправить любое поле перед подтверждением.')
-    gr.Markdown('Все даты и часы расписания указаны в **GMT+4**. Доступны ближайшие 14 календарных дней; на сегодня — минимум за 30 минут.')
+    gr.Markdown(UI_COPY['policy'])
     with gr.Accordion('Подготовка синтетического пациента — отдельное действие',open=False):
         synthetic_name=gr.Textbox(label='Только вымышленное ФИО (фамилия имя отчество)',value='Тестов Иван Сергеевич')
         synthetic_birth=gr.Textbox(label='Вымышленная дата рождения',value='01.01.1990')
@@ -333,7 +335,7 @@ with gr.Blocks(title="Голосовая регистратура — демо /
         btn_asr=gr.Button('Только распознать, без отправки')
         asr_info=gr.Markdown('Диагностика последней записи появится здесь.')
         tts_info=gr.Markdown('Диагностика синтеза доступна по кнопке «Проверить голос».')
-        gr.Markdown('Расписание: 85 врачей / 136 973 слота из Excel. Модели не скачиваются во время разговора. LLM выключена по умолчанию.')
+        gr.Markdown(UI_COPY['schedule'] + ' Речевые модели подготовьте заранее; LLM выключена по умолчанию.')
     with gr.Accordion('Административный раздел — очередь оператору (демо)',open=False):
         gr.Markdown('Статус «Требуется оператор» означает заявку, а не телефонное соединение. Только вымышленные данные.')
         incident_refresh=gr.Button('Обновить очередь оператору')

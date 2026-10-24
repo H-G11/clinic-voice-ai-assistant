@@ -82,3 +82,10 @@ Piper integration follows the [official Python API](https://github.com/OHF-Voice
 - `scripts/demo_local.py` is an isolated, generated synthetic service/simulator demo, not a case import or voice evaluation. Its fixed clock is fixture-local.
 
 - Explicit booking refusal invalidates the pending draft in both dialogue flows. Call-recording requests do not masquerade as booking consent/refusal, and the prototype does not claim an implemented call-recording toggle.
+
+## Showcase and response binding
+
+- A successful cancel/reschedule Result must carry the same external visit ID as the owned source record. A different ID becomes uncertain and retains the appropriate slot locks; it cannot authorize releasing/replacing a reservation.
+- `scripts.demo_local.run_demo(measure=False, trace=None)` retains its default JSON contract. Optional measurement adds per-event `latency_ms`; trace callbacks receive verified event copies after each actual operation. It never invokes ASR/UI/live MIS.
+- `scripts/benchmark_service.py` times isolated sequential local service calls, excluding fixture construction and inter-call reads; raw samples and hardware accompany summary quantiles.
+- `core.presentation.schedule_presentation(store,clinic_mode)` derives greeting, policy and actual doctor/slot counts from the loaded schedule. Legacy mode must not advertise case-only cancellation/move or GMT+4/horizon rules; historical case counts are not hardcoded into the interface.

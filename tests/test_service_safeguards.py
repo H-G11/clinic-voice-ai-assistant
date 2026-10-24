@@ -134,3 +134,19 @@ class ConfigurationValidation(unittest.TestCase):
         for options in ({'limit': True}, {'limit': 1.5}, {'window': float('nan')}, {'window': float('inf')}):
             with self.subTest(options=options), self.assertRaises(ValueError):
                 RateLimiter(**options)
+
+
+class MutationIDGuards(unittest.TestCase):
+    setUp = ServiceSafeguards.setUp
+    book = ServiceSafeguards.book
+    def test_cancel_wrong_external_id_does_not_release_slot(self):
+        booking = self.book()
+        with patch.object(self.svc.mis, 'cancel', return_value=Result('ok', 'unexpected-visit')):
+            self.assertEqual('uncertain', self.svc.cancel(self.name, self.dob, booking, confirmed=True).kind)
+        self.assertNotIn(self.first, self.svc.free_slots('D001', self.day))
+
+    def test_move_wrong_external_id_blocks_original_and_target(self):
+        booking = self.book()
+        with patch.object(self.svc.mis, 'reschedule', return_value=Result('ok', 'unexpected-visit')):
+            self.assertEqual('uncertain', self.svc.reschedule(self.name, self.dob, booking, 'D001', self.second, confirmed=True).kind)
+        self.assertEqual([], self.svc.free_slots('D001', self.day))

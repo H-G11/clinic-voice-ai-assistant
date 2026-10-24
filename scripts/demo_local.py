@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import argparse
 import json
+import time
 import sys
 import tempfile
 from datetime import datetime
@@ -13,7 +15,7 @@ from core.service import BookingService
 from core.store import Store
 
 
-def run_demo() -> dict:
+def run_demo(*, measure: bool = False, trace=None) -> dict:
     events = []
     with tempfile.TemporaryDirectory() as directory:
         store = Store(Path(directory) / 'demo.sqlite3')
@@ -27,24 +29,32 @@ def run_demo() -> dict:
         svc = BookingService(store, now=lambda: datetime(2026, 10, 15, 9))
         patient, birthdate = 'Тестов Иван Сергеевич', '01.01.1990'
 
-        def record(action, result, expected):
+        def record(action, operation, expected):
+            started = time.perf_counter()
+            result = operation()
+            elapsed = (time.perf_counter() - started) * 1000
             if result.kind != expected:
                 raise RuntimeError(f'{action}: expected {expected}, got {result.kind}')
-            events.append({'action': action, 'result': result.kind})
+            event = {'action': action, 'result': result.kind}
+            if measure:
+                event['latency_ms'] = elapsed
+            events.append(event)
+            if trace is not None:
+                trace(dict(event))
 
-        record('registration_without_consent', svc.register_synthetic(patient, birthdate), 'rejected')
-        record('explicit_synthetic_registration', svc.register_synthetic(patient, birthdate, confirmed=True), 'ok')
-        record('create_after_reviewed_summary', svc.create(patient, birthdate, 'D001', '2026-10-16T10:00'), 'ok')
+        record('registration_without_consent', lambda: svc.register_synthetic(patient, birthdate), 'rejected')
+        record('explicit_synthetic_registration', lambda: svc.register_synthetic(patient, birthdate, confirmed=True), 'ok')
+        record('create_after_reviewed_summary', lambda: svc.create(patient, birthdate, 'D001', '2026-10-16T10:00'), 'ok')
         booking = svc.patient_bookings(patient, birthdate)[0]
-        record('duplicate_booking', svc.create(patient, birthdate, 'D001', '2026-10-16T10:00'), 'rejected')
-        record('status', svc.booking_status(patient, birthdate, booking['id']), 'ok')
-        record('move_without_consent', svc.reschedule(patient, birthdate, booking['id'], 'D001', '2026-10-16T11:00'), 'rejected')
-        record('confirmed_move', svc.reschedule(patient, birthdate, booking['id'], 'D001', '2026-10-16T11:00', confirmed=True), 'ok')
+        record('duplicate_booking', lambda: svc.create(patient, birthdate, 'D001', '2026-10-16T10:00'), 'rejected')
+        record('status', lambda: svc.booking_status(patient, birthdate, booking['id']), 'ok')
+        record('move_without_consent', lambda: svc.reschedule(patient, birthdate, booking['id'], 'D001', '2026-10-16T11:00'), 'rejected')
+        record('confirmed_move', lambda: svc.reschedule(patient, birthdate, booking['id'], 'D001', '2026-10-16T11:00', confirmed=True), 'ok')
         moved = svc.patient_bookings(patient, birthdate)[0]
         if booking['external_id'] != moved['external_id']:
             raise RuntimeError('Reschedule changed the external visit ID')
-        record('cancel_without_consent', svc.cancel(patient, birthdate, moved['id']), 'rejected')
-        record('confirmed_cancel', svc.cancel(patient, birthdate, moved['id'], confirmed=True), 'ok')
+        record('cancel_without_consent', lambda: svc.cancel(patient, birthdate, moved['id']), 'rejected')
+        record('confirmed_cancel', lambda: svc.cancel(patient, birthdate, moved['id'], confirmed=True), 'ok')
         cancelled = svc.booking_status(patient, birthdate, moved['id'])
         if cancelled.kind != 'ok' or cancelled.message != 'Отменена':
             raise RuntimeError('Cancellation was not verified by the mock API')
@@ -57,4 +67,14 @@ def run_demo() -> dict:
 
 
 if __name__ == '__main__':
-    print(json.dumps(run_demo(), ensure_ascii=False, indent=2))
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--trace', action='store_true', help='Print actual service execution, not a conversation')
+    args = parser.parse_args()
+    if args.trace:
+        print('LOCAL SERVICE DEMO | synthetic fixture | fixed clock | no speech or real MIS', flush=True)
+        def show(event):
+            print(f"{event['action']:<33} {event['result']:<9} {event['latency_ms']:8.3f} ms", flush=True)
+        report = run_demo(measure=True, trace=show)
+        print('VERIFIED: same visit ID after move; cancellation checked; both slots free', flush=True)
+    else:
+        print(json.dumps(run_demo(), ensure_ascii=False, indent=2))

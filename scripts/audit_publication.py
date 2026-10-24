@@ -49,6 +49,12 @@ def audit(staged=False):
         if name in ('data/analysis/calls_by_hour.png','data/analysis/visit_statuses.png'):
             if not blob.startswith(b'\x89PNG\r\n\x1a\n'):findings.append({'file':name,'kind':'unexpected_binary'})
             continue  # reviewed aggregate-only plots; original source rows excluded
+        if name == 'docs/assets/service-replay.gif':
+            # Generated exclusively from reviewed synthetic CLI stdout; see assets/README.md.
+            # check_assets.py separately binds the associated SVG/measurements to their sources.
+            if not blob.startswith((b'GIF87a', b'GIF89a')) or len(blob) > 1_000_000:
+                findings.append({'file':name,'kind':'unexpected_binary'})
+            continue
         try:text=blob.decode('utf-8-sig')
         except UnicodeDecodeError:
             findings.append({'file':name,'kind':'unexpected_binary'});continue

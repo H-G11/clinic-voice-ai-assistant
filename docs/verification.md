@@ -6,7 +6,7 @@ Environment: Linux x86_64, CPython 3.14.7. This is not the original Windows deve
 | --- | --- |
 | Original full discovery before changes | 56 discovered/run, 30 passed, 2 assertion failures, 11 errors, 13 skips |
 | Current full discovery | 72 discovered/run, 50 passed, 0 assertion failures, 11 errors, 13 skips |
-| New SQLite service safeguard tests | 13 passed; real in-process mock adapter, no Excel or sockets |
+| New SQLite service safeguard tests | 15 passed; real in-process mock adapter, no Excel or sockets |
 | Voice tests (existing + portable regressions) | 6 passed, 2 existing skips (Windows SAPI / real Piper model) |
 | `python scripts/demo_local.py` | Passed; actual output in demo-service.json |
 | Python compilation | Passed |
@@ -19,7 +19,7 @@ Environment: Linux x86_64, CPython 3.14.7. This is not the original Windows deve
 
 Eight module-import errors stem from missing openpyxl (and further Pydantic/Gradio dependencies will be required once imports progress). Two ASR preprocessing errors require NumPy/voice dependencies; one simulator HTTP test cannot create sockets: total 11. Do not interpret missing modules as passing or silently skip them.
 
-The source originally defines 123 `test_*` methods. Static counting is not a test run; unavailable imports prevent complete discovery. The edited tree defines 142 methods after 19 additional regressions. The earlier statement of 123 PASS remains historical and unverified in this environment. Existing Excel/model-dependent skips were preserved.
+The source originally defines 123 `test_*` methods. Static counting is not a test run; unavailable imports prevent complete discovery. The edited tree defines 148 methods after 25 additional regressions. The earlier statement of 123 PASS remains historical and unverified in this environment. Existing Excel/model-dependent skips were preserved.
 
 ## Confirmed fixes
 
@@ -42,3 +42,13 @@ Four binary blobs (aggregate PNGs and the presentation) require separate manual 
 The existing `python scripts/audit_publication.py` gate was also executed: exit 1, two `unexpected_binary` findings (`docs/presentation/clinic-voice-ai-pitch.pdf` and `docs/presentation/cover.png`). These retained presentation assets are not approved by its narrow binary allowlist. The gate was not weakened to hide them. Publication stays blocked until their content/rights are reviewed and an explicit asset policy is recorded; they were not deleted or replaced.
 
 Full dependency vulnerability scanning and remote CI remain blocked. Do not call the prototype production-ready or connect real patient systems based on these checks.
+
+## Showcase implementation follow-up
+
+A cancel/move Result naming the wrong external visit now becomes uncertain; two additional regression tests verify that the original/target locks remain. New UI copy derives actual doctor/slot counts and mode-specific capabilities from the loaded schedule, replacing misleading hardcoded case counts and policies in legacy mode. That helper has a passing offline regression; actual Gradio rendering remains blocked.
+
+The actual synthetic service demo was extended with optional per-operation timing and a verified-event trace, preserving its default JSON contract. Three tests cover real demo execution, trace correspondence and sample quantiles. `benchmark_service.py` ran 30 repetitions after 3 warmups: create/move/cancel medians 2.303/2.105/1.312 ms on AMD Ryzen 7 7735H, 16 logical CPUs, Linux/Python 3.14.7. Raw samples and scope are in `assets/service-benchmark.json`; these are neither speech nor HTTP timings.
+
+`build_showcase.py` rendered captured stdout into a static SVG and an 11-frame, 11-second GIF replay (1040×480, about 309 KiB), plus a measured timing table and an authored architecture diagram. This is actual CLI-result playback, not an invented Gradio screen. SVGs were rasterized for inspection; ffprobe checked GIF dimensions/frame count. The asset validator passed source-text/JSON correspondence, accessible SVG metadata, absence of executable/external SVG content and GIF bounds.
+
+The publication gate explicitly permits the reviewed generated synthetic CLI GIF by exact path/signature/size policy; unrelated binaries still fail. Its current result remains exit 1 for the pre-existing presentation PDF and cover PNG. The original block is not hidden. Actual browser/speech recording, model evaluation, Ruff/Bandit/pip-audit and remote CI remain blocked.
