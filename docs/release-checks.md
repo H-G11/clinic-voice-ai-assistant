@@ -1,5 +1,7 @@
 # Публикация первого чекпоинта — 15.10.2026
 
+> Historical author-supplied record. Performance, test counts and device checks below were not reproduced in the 2026-10-24 audit. See [current verification](verification.md) for actual results and blockers.
+
 Публикуется текущий стабильный MOCK MVP; новых продуктовых функций при подготовке релиза не добавлено.
 Адрес, предоставленный владельцем: https://github.com/H-G11/clinic-voice-ai-assistant.
 

@@ -49,7 +49,7 @@ To connect live MIS: verify supplied text against actual server/OpenAPI, map doc
 - `parse_patient_birthdate` extends the case flow with unambiguous spoken/numeric birthdates; ambiguous two-digit years require clarification. Original conservative `parse_birthdate` contract preserved.
 - Input audio cache is inside project and removed after ASR. Local metrics allow only timing/engine/success, no transcripts or patient identifiers.
 
-Piper integration follows the [official Python API](https://github.com/OHF-Voice/piper1-gpl/blob/main/docs/API_PYTHON.md). Real synthesis and HTTP WAV delivery verified locally; user reported audible Russian playback.
+Piper integration follows the [official Python API](https://github.com/OHF-Voice/piper1-gpl/blob/main/docs/API_PYTHON.md). The original developer recorded local synthesis/HTTP WAV checks and user-reported audible playback; those speech checks were not reproduced in the 2026-10-24 audit.
 
 ## User-flow correction, 15.10.2026
 - Case state retains intent, specialty, doctor/day/time while proposing registration. Successful explicit registration saves client_id and resumes `_ask`; refusal creates nothing. Separate registration form and dialogue share the same service/DB/team.
@@ -71,3 +71,12 @@ Piper integration follows the [official Python API](https://github.com/OHF-Voice
 - Natural corrections keep verified identity and doctor, invalidate old confirmation and revalidate actual slots. Spoken ordinal selection uses only the most recently offered choices. Draft move language changes a draft date; confirmed bookings use existing service PATCH path.
 - `MicrophoneBenchmark.save/run` stores audio/reference/transcript/model/latencies and WER/CER/by-field scores in ignored data/asr_benchmark/<session>. Session IDs validated; per-run report files retained. UI uses fixed prepared synthetic references; no cloud. `source_kind=synthetic_test` explicitly labels automated tool tests; user microphone accuracy is not inferred from those tests.
 - Diagnostic model/device/RMS/DC/peak/edge/latency data is in a developer panel. Patient UI preserves actual refusal reasons and labels all mutations as demo; internal API IDs are available in administrative records.
+
+## Portfolio audit corrections — 2026-10-24
+
+- `voice.synthesize` selects Piper on any OS; Windows-only SAPI is a fallback. Invalid engine names and missing local engines keep text usable. The Piper cache is keyed by the resolved model path.
+- HTTP timeout/window values must be finite and positive (limiter window >=60); limit is an integer in 1..10.
+- Unknown/malformed adapter transport results and mismatched registration identity remain `uncertain`, retaining reconciliation guards. A malformed nested doctor field cannot confirm status or a move.
+- `booking_status` compares response client ID to the identity already resolved for this request; it does not make a second identity API call.
+- Multiple source workbooks are rejected as ambiguous. `.env.example` documents process variables; `.env` is not loaded automatically.
+- `scripts/demo_local.py` is an isolated, generated synthetic service/simulator demo, not a case import or voice evaluation. Its fixed clock is fixture-local.

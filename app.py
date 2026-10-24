@@ -22,7 +22,9 @@ os.environ.setdefault('GRADIO_TEMP_DIR',str(DATA/'audio_cache'))
 os.environ.setdefault('ASR_LOCAL_ONLY','1')
 if os.getenv("MIS_MODE", "mock") != "mock":
     raise RuntimeError("Реальный стенд не проверен. Сейчас доступен только локальный MOCK.")
-clinic_sources = list((DATA/'source').glob('*.xlsx'))
+clinic_sources = sorted((DATA/'source').glob('*.xlsx'))
+if len(clinic_sources) > 1:
+    raise RuntimeError('В data/source должен быть ровно один разрешённый Excel; неоднозначный выбор расписания запрещён.')
 store = Store(DATA / ('clinic_demo.sqlite3' if clinic_sources else 'demo.sqlite3'))
 if clinic_sources:
     import_clinic_excel(store, clinic_sources[0])

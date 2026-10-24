@@ -1,0 +1,47 @@
+{
+  "source_kind": "synthetic_generated_fixture",
+  "clock": "2026-10-15T09:00:00 GMT+4",
+  "scope": "Actual service and in-process mock API; no dialogue, speech, real MIS or telephony",
+  "database": "temporary; removed after demo",
+  "events": [
+    {
+      "action": "registration_without_consent",
+      "result": "rejected"
+    },
+    {
+      "action": "explicit_synthetic_registration",
+      "result": "ok"
+    },
+    {
+      "action": "create_after_reviewed_summary",
+      "result": "ok"
+    },
+    {
+      "action": "duplicate_booking",
+      "result": "rejected"
+    },
+    {
+      "action": "status",
+      "result": "ok"
+    },
+    {
+      "action": "move_without_consent",
+      "result": "rejected"
+    },
+    {
+      "action": "confirmed_move",
+      "result": "ok"
+    },
+    {
+      "action": "cancel_without_consent",
+      "result": "rejected"
+    },
+    {
+      "action": "confirmed_cancel",
+      "result": "ok"
+    }
+  ],
+  "same_external_id_after_move": true,
+  "cancellation_verified": true,
+  "free_slots_after_cancel": 2
+}

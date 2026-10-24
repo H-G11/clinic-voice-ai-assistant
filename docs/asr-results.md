@@ -1,5 +1,7 @@
 # ASR: измерения на аудио и ручная проверка
 
+> Historical author-supplied record. Performance, test counts and device checks below were not reproduced in the 2026-10-24 audit. See [current verification](verification.md) for actual results and blockers.
+
 Измерено 20 WAV, синтезированных локальным Piper из [размеченных фраз](../tests/asr_eval_20.csv).
 Это **синтетическая проверка**, а не измеренная точность человеческого голоса или микрофона пользователя.
 Модель действительно обрабатывала аудио; затем парсер извлекал специальность/дату/время/ФИО/дату рождения/согласие/операторский запрос.

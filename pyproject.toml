@@ -1,0 +1,7 @@
+[tool.ruff]
+target-version = "py311"
+exclude = ["docs/provenance"]
+
+[tool.ruff.lint]
+# Correctness checks for the existing codebase; avoid a broad style rewrite.
+select = ["E9", "F821", "F822", "F823"]

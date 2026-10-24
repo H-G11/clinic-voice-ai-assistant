@@ -1,5 +1,7 @@
 # Голос и естественный диалог — 15.10.2026
 
+> Historical author-supplied record. Performance, test counts and device checks below were not reproduced in the 2026-10-24 audit. See [current verification](verification.md) for actual results and blockers.
+
 ## Что проверено, а что ещё неизвестно
 
 Владелец подтвердил, что запись/перенос/отмена и Piper работают, а ASR на его голосе плох.

@@ -1,0 +1,129 @@
+{
+  "python": "3.14.7",
+  "platform": "Linux-7.2.3-arch1-3-x86_64-with-glibc2.44",
+  "patterns": [
+    "test*.py"
+  ],
+  "tests_run": 72,
+  "passed": 48,
+  "failures": 0,
+  "errors": 11,
+  "skipped": 13,
+  "skips": [
+    {
+      "test": "test_operator_queue.TestOperatorQueue.test_emergency_response_does_not_wait_for_database",
+      "reason": "Case Excel required"
+    },
+    {
+      "test": "test_operator_queue.TestOperatorQueue.test_failed_patient_lookup_still_leaves_local_queue",
+      "reason": "Case Excel required"
+    },
+    {
+      "test": "test_operator_queue.TestOperatorQueue.test_identified_case_uses_api_escalation_and_context",
+      "reason": "Case Excel required"
+    },
+    {
+      "test": "test_operator_queue.TestOperatorQueue.test_unidentified_incident_never_invents_api_client",
+      "reason": "Case Excel required"
+    },
+    {
+      "test": "test_user_journey.TestNewPatientJourney.test_existing_api_card_without_cache_and_normalized_fields",
+      "reason": "Case Excel required"
+    },
+    {
+      "test": "test_user_journey.TestNewPatientJourney.test_inline_registration_to_cancelled_status",
+      "reason": "Case Excel required"
+    },
+    {
+      "test": "test_user_journey.TestNewPatientJourney.test_malformed_registration_id_stays_uncertain_without_retry",
+      "reason": "Case Excel required"
+    },
+    {
+      "test": "test_user_journey.TestNewPatientJourney.test_registration_final_persistence_failure_keeps_pending_guard",
+      "reason": "Case Excel required"
+    },
+    {
+      "test": "test_user_journey.TestNewPatientJourney.test_registration_refusal_and_real_mode_never_create",
+      "reason": "Case Excel required"
+    },
+    {
+      "test": "test_user_journey.TestNewPatientJourney.test_registration_timeout_never_blindly_posts_again",
+      "reason": "Case Excel required"
+    },
+    {
+      "test": "test_user_journey.TestNewPatientJourney.test_team_context_isolated",
+      "reason": "Case Excel required"
+    },
+    {
+      "test": "test_voice.TestPiper.test_real_russian_synthesis_has_non_silent_pcm",
+      "reason": "Local Piper model not installed"
+    },
+    {
+      "test": "test_voice.TestVoice.test_valid_wav_path_and_fallback",
+      "reason": "Windows TTS"
+    }
+  ],
+  "exceptions": [
+    {
+      "test": "test_asr.TestASR.test_quiet_edges_are_not_trimmed_and_silence_is_not_transcribed",
+      "type": "ModuleNotFoundError"
+    },
+    {
+      "test": "test_asr.TestASR.test_stereo_48k_is_resampled_without_cutting_edges",
+      "type": "ModuleNotFoundError"
+    },
+    {
+      "test": "unittest.loader._FailedTest.test_clinic_dialog",
+      "type": "ImportError"
+    },
+    {
+      "test": "unittest.loader._FailedTest.test_clinic_mutations",
+      "type": "ImportError"
+    },
+    {
+      "test": "unittest.loader._FailedTest.test_clinic_schedule",
+      "type": "ImportError"
+    },
+    {
+      "test": "unittest.loader._FailedTest.test_http_client",
+      "type": "ImportError"
+    },
+    {
+      "test": "unittest.loader._FailedTest.test_mvp",
+      "type": "ImportError"
+    },
+    {
+      "test": "unittest.loader._FailedTest.test_natural_dialog",
+      "type": "ImportError"
+    },
+    {
+      "test": "unittest.loader._FailedTest.test_russian",
+      "type": "ImportError"
+    },
+    {
+      "test": "test_swagger_simulator.TestSwagger.test_auth_and_real_http_contract",
+      "type": "PermissionError"
+    },
+    {
+      "test": "unittest.loader._FailedTest.test_ui",
+      "type": "ImportError"
+    }
+  ],
+  "dependencies": {
+    "pip": null,
+    "openpyxl": null,
+    "pydantic": null,
+    "defusedxml": null,
+    "gradio": null,
+    "numpy": null,
+    "av": null,
+    "faster-whisper": null,
+    "piper-tts": null,
+    "ultralytics": null,
+    "torch": null,
+    "ruff": null,
+    "bandit": null,
+    "pip-audit": null
+  },
+  "successful": false
+}

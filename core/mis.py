@@ -7,7 +7,7 @@ from .store import Store
 from typing import Protocol
 from datetime import datetime
 from .api_simulator import LocalAPI, LocalTransport, PLANNED, CANCELLED
-from .http_client import HTTPClient
+from .http_client import HTTPClient, HTTPResult
 import os
 import time
 import unicodedata
@@ -85,9 +85,11 @@ class SwaggerMIS:
         return self.transport.request(method,path,payload,params=params,mutation_authorized=method!='GET')
 
     def _result(self,response,expected_status,expected_fields=None):
+        if not isinstance(response, HTTPResult):
+            return Result('uncertain',message='Некорректный ответ транспорта; нужна сверка')
         if response.kind=='rate_limited':
             return Result('rejected',message=f'Лимит запросов: повторите не раньше чем через {int(response.retry_after)+1} с')
-        if response.kind in ('uncertain','error') or (response.status and response.status>=500):
+        if response.kind != 'response' or type(response.status) is not int or response.status>=500:
             return Result('uncertain',message='Результат неизвестен; нужна сверка без повторной отправки')
         if response.status not in expected_status:
             return Result('rejected',message=f'API отклонил операцию (HTTP {response.status})')
@@ -107,7 +109,7 @@ class SwaggerMIS:
         if result.kind=='ok':
             actual=' '.join(response.data.get(k,'') or '' for k in ('last_name','first_name','middle_name'))
             if normalized_identity(actual)!=normalized_identity(full_name):
-                return Result('rejected',message='Данные карточки не совпадают. Нужна проверка сотрудника; отчество автоматически не меняем.')
+                return Result('uncertain',message='Данные карточки не совпадают. Нужна проверка сотрудника; отчество автоматически не меняем.')
         return result
 
     def identity_matches(self,full_name,birthdate):
@@ -152,7 +154,7 @@ class SwaggerMIS:
         stamp=datetime.fromisoformat(slot).strftime('%d.%m.%Y %H:%M')
         response=self._send('PATCH','/visits/'+str(external_id),{'doctor_id':self.doctor_map[doctor_id],'scheduled_at':stamp})
         result=self._result(response,(200,),{'id':int(external_id),'scheduled_at':stamp,'status':PLANNED})
-        if result.kind=='ok' and response.data.get('doctor',{}).get('id')!=self.doctor_map[doctor_id]:
+        if result.kind=='ok' and (not isinstance(response.data.get('doctor'),dict) or response.data['doctor'].get('id')!=self.doctor_map[doctor_id]):
             return Result('uncertain',message='API вернул другого врача; нужна сверка')
         return result
 

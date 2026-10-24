@@ -18,6 +18,7 @@ _model = None
 _model_key = None
 _asr_lock = threading.Lock()
 _piper_voice = None
+_piper_model_path = None
 _piper_lock = threading.Lock()
 
 
@@ -182,24 +183,29 @@ def transcribe(path: str) -> str:
 
 
 def synthesize(text: str) -> SpeechResult:
-    """Create a validated PCM WAV using System.Speech, then local SAPI COM."""
+    """Use local Piper on any OS, with Windows SAPI as an optional fallback."""
     started = time.perf_counter()
-    if os.name != "nt" or os.getenv("DISABLE_TTS", "0") == "1":
-        return SpeechResult(None, 'Озвучивание отключено или Windows SAPI недоступен.')
+    if os.getenv("DISABLE_TTS", "0") == "1":
+        return SpeechResult(None, 'Озвучивание отключено. Текстовый сценарий доступен.')
+    engine=os.getenv('TTS_ENGINE','auto').casefold()
+    if engine not in ('auto', 'piper', 'sapi'):
+        return SpeechResult(None, 'Неизвестный TTS_ENGINE. Текстовый сценарий доступен.')
+    if engine == 'sapi' and os.name != 'nt':
+        return SpeechResult(None, 'Windows SAPI недоступен. Текстовый сценарий доступен.')
     audio_dir = Path(__file__).resolve().parent.parent / 'data' / 'tts'
     audio_dir.mkdir(parents=True, exist_ok=True)
     fd, filename = tempfile.mkstemp(prefix='response_', suffix='.wav', dir=audio_dir)
     os.close(fd)
     temp_path = Path(filename)
-    engine=os.getenv('TTS_ENGINE','auto').casefold()
     model=Path(os.getenv('PIPER_MODEL',str(audio_dir.parent/'models/ru_RU-irina-medium.onnx')))
     if engine in ('auto','piper') and model.is_file():
         try:
             from piper import PiperVoice
-            global _piper_voice
+            global _piper_voice, _piper_model_path
             with _piper_lock:
-                if _piper_voice is None:
+                if _piper_voice is None or _piper_model_path != model.resolve():
                     _piper_voice=PiperVoice.load(str(model),use_cuda=False)
+                    _piper_model_path=model.resolve()
                 with wave.open(str(temp_path),'wb') as wav:
                     _piper_voice.synthesize_wav(text,wav)
             with wave.open(str(temp_path),'rb') as wav:
@@ -207,7 +213,7 @@ def synthesize(text: str) -> SpeechResult:
             elapsed=time.perf_counter()-started
             timing('tts',engine='piper',seconds=elapsed,success=True)
             return SpeechResult(str(temp_path),f'Piper CPU: WAV готов ({elapsed:.1f} с). Нажмите ▶ для воспроизведения.',elapsed)
-        except (ImportError,OSError,ValueError,RuntimeError,wave.Error):
+        except (ImportError,OSError,ValueError,RuntimeError,EOFError,wave.Error):
             if engine=='piper':
                 temp_path.unlink(missing_ok=True)
                 timing('tts',engine='piper',seconds=time.perf_counter()-started,success=False)
@@ -215,6 +221,9 @@ def synthesize(text: str) -> SpeechResult:
     elif engine=='piper':
         temp_path.unlink(missing_ok=True)
         return SpeechResult(None,'Русская модель Piper не найдена локально. Загрузка при ответе не выполняется.')
+    if os.name != 'nt':
+        temp_path.unlink(missing_ok=True)
+        return SpeechResult(None, 'Локальный Piper недоступен; Windows SAPI требует Windows. Текстовый сценарий доступен.')
     safe_path = str(temp_path).replace("'", "''")
     # The spoken text is injected as BASE64 to avoid PowerShell quoting issues.
     speech = base64.b64encode(text.encode("utf-8")).decode("ascii")

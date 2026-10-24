@@ -1,123 +1,138 @@
 # Clinic Voice AI Assistant
 
-Голосовой ИИ-помощник регистратуры поликлиники — локальный MVP для хакатона.
+A local prototype of a Russian-language clinic receptionist. It combines deterministic appointment dialogue, optional local speech recognition/synthesis, SQLite persistence and an in-process MIS simulator. It is intended for synthetic demonstrations and engineering evaluation.
 
-## Презентация проекта
+## Reproducible demonstration
 
-[![Голосовой ассистент для записи в поликлинику — первый слайд презентации](docs/presentation/cover.png)](docs/presentation/clinic-voice-ai-pitch.pdf)
+This service demo needs only Python 3.11+ and does not download models, import case data, open network sockets or touch the application database:
 
-**[Смотреть презентацию (PDF)](docs/presentation/clinic-voice-ai-pitch.pdf)** · 9 слайдов · [Скачать PDF](docs/presentation/clinic-voice-ai-pitch.pdf?raw=1)
-
-> Презентация описывает концепцию и целевые показатели. Текущий MVP работает в локальном DEMO: настоящая МИС, телефония и напоминания не подключены.
-
-
-Пациент может своими словами попросить записать его к врачу, узнать время приёма, перенести или отменить запись. Ассистент распознаёт русскую речь, проверяет расписание, уточняет необходимые данные и озвучивает ответ. Критические действия требуют явного подтверждения.
-Статус на 15.10.2026: работающий локальный DEMO/MOCK. Расписание импортируется из предоставленного организаторами Excel; данные кейса синтетические. Операции выполняются в локальном симуляторе, а не в МИС организаторов. Клиент настоящего REST API подготовлен, но живой стенд ещё не проверен из-за отсутствия доступа. Телефония и реальные переводы звонков не подключены.
-
-Что уже реализовано
-Возможность	Состояние
-Русский голосовой ввод	faster-whisper (base/small, локально); точность на живой речи требует улучшения
-Русский голосовой ответ	Piper TTS, локальный голос Irina; подтверждён ручной проверкой
-Расписание врачей	85 врачей и 136 973 слота из Excel кейса
-Запись / статус / перенос / отмена	Реализованы и проверены на локальном API-симуляторе
-Поиск и регистрация тестового пациента	Только синтетические данные, создание карточки — с отдельным согласием
-Свободные фразы и исправления	Поддерживаются даты, периоды дня, варианты слотов и исправления в ходе диалога
-Безопасность	Подтверждение действий; экстренная маршрутизация к 103/112; запрет медицинских советов
-Эскалация к оператору	Локальная карточка и очередь заявок; не телефонное соединение
-Аналитика	Обезличенные агрегаты исторических звонков и приёмов
-Автоматическая проверка	123 теста PASS в подготовленном окружении разработчика и HTTP-проверка Gradio
-
-
-Данные кейса: 17 772 исторических звонка и 35 470 приёмов. Это исходные данные для анализа нагрузки, не результаты внедрения ассистента.
-Как выглядит демонстрация
-1. Пациент говорит или вводит: «Запишите меня к хирургу в пятницу после обеда».
-2. Ассистент извлекает специальность, дату и предпочтение по времени; проверяет свободные слоты из Excel.
-3. Пациент называет вымышленные ФИО и дату рождения. Если карточки ещё нет, ассистент предлагает создать её после отдельного подтверждения.
-4. Ассистент сообщает доступные варианты (до трёх), уточняет выбор и озвучивает итоговую сводку: врач, дата, время, кабинет.
-5. Только после явного подтверждения создаётся локальная запись. Затем доступны проверка статуса, перенос и отмена.
-В экстренном сценарии, например при словах «давит в груди», сценарий записи прерывается и появляется инструкция обратиться за экстренной помощью. При просьбе оператора создаётся локальная заявка без ложного обещания реального соединения.
-Пошаговый сценарий для жюри: [`docs/demo_script.md`](docs/demo_script.md). Документ с результатами интерфейсных проверок: [`docs/ui-evidence.json`](docs/ui-evidence.json).
-Быстрый запуск на Windows
-Требования: Windows, Python 3.11+ и Git, подключение к интернету при первой установке пакетов и публичных голосовых моделей. Проверенная среда разработчика — Python 3.14.6. Для первого запуска CUDA не требуется: ASR работает на CPU int8.
-git clone https://github.com/H-G11/clinic-voice-ai-assistant.git
-cd clinic-voice-ai-assistant
-py -3 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt -r requirements-voice.txt -r requirements-tts.txt
-
-# Один раз загрузить публичную модель распознавания речи:
-.\.venv\Scripts\python.exe scripts/download_asr_small.py
-
-# Один раз загрузить русский голос для локальной озвучки:
-.\.venv\Scripts\python.exe -m piper.download_voices ru_RU-irina-medium --data-dir data/models
-
-.\start_windows.bat
-Откройте http://127.0.0.1:7860. Аудио и данные пациентов не отправляются в облачные сервисы распознавания или озвучки. Для простой проверки без Excel будет доступен ограниченный демонстрационный набор из трёх врачей — он не является полным расписанием кейса.
-При повторном запуске достаточно start_windows.bat. Если старая версия приложения уже открыта, остановите её через Ctrl+C перед перезапуском.
-
-Полное DEMO с расписанием организаторов
-Исходный Excel не включён в публичный репозиторий. Получите разрешённую копию у организаторов или владельца кейса. Не публикуйте её без разрешения.
-1. Скопируйте Расписание_врачей_25.06-31.12.2026.xlsx в data/source/.
-2. Импортируйте расписание:
-New-Item -ItemType Directory -Force data/source
-.\.venv\Scripts\python.exe scripts/import_clinic.py
-3. Перезапустите start_windows.bat. Ожидаемый импорт — 85 врачей, 136 973 слота в отдельную локальную БД data/clinic_demo.sqlite3.
-Импорт проверяет календарь, отсутствие врачей, статус слота, горизонт записи 14 дней и ограничение 30 минут до приёма в текущий день. Время интерпретируется в часовом поясе стенда GMT+4. Данные файла содержат слоты до 30.12.2026; на 31 декабря слоты не придумываются.
-Для полного демонстрационного сценария запись/перенос/отмена необходимо предварительно импортировать Excel. При отсутствии файла можно проверить только упрощённый локальный пример. CSV с историей звонков/приёмов для обычного запуска не нужны.
-Архитектура
-```mermaid
-flowchart TD
-    U[Пациент: микрофон или текст] --> UI[Gradio]
-    UI --> ASR[faster-whisper: локальный ASR]
-    ASR --> D[Контроллер диалога: намерения и контекст]
-    UI --> D
-    D --> SAFE[Правила безопасности и явное подтверждение]
-    SAFE --> S[BookingService]
-    X[Excel расписания] --> DB[(SQLite)]
-    S <--> DB
-    S --> MIS[Локальный API-симулятор / MockMIS]
-    MIS <--> DB
-    S --> R[Проверенный результат]
-    R --> TTS[Piper: локальная русская речь]
-    TTS --> UI
+```bash
+python scripts/demo_local.py
 ```
-- Gradio — микрофон, чат, исправление транскрипта, выбор слота, панель диагностики.
-- faster-whisper / CTranslate2 — локальное распознавание русской речи (профили base и small).
-- Детерминированный контроллер диалога — сбор параметров, проверка контекста, ветвления по регламенту РГ-ТЕЛ-01.
-- Pydantic — строгая валидация структурированного понимания речи.
-- SQLite + Excel — расписание, локальные пациенты, записи и блокировка конфликтующих слотов.
-- Локальный REST-симулятор — совместимые со спецификацией операции /api/v1: врачи, клиенты, визиты и эскалации.
-- Piper TTS — синтез русского аудио без облачного сервиса.
-LLM сейчас не обязательна для работы. Опциональный локальный адаптер Ollama подготовлен, но запуск модели в текущей сборке не подтверждён; по умолчанию он выключен. Модель не получает прямого права создавать записи и не подменяет проверку доступности.
-Голос: качество и ограничения
-В подготовленном окружении сравнивались модели base и small на 20 синтетических аудиозаписях Piper, а не на человеческой речи:
-ASR-конфигурация	Правильное извлечение ключевого поля	Медиана ASR в предыдущем прогоне
-base, beam=1	13/20	0,87 с
-small, beam=5	17/20	2,98 с
 
+It actually executes separate registration consent, appointment creation, duplicate rejection, status, confirmed rescheduling with the same external ID, and confirmed cancellation. All identities and schedule rows are generated synthetic fixtures with a fixed clock. [Recorded output](docs/demo-service.json) was produced by this command; it demonstrates the service and simulator, not ASR, dialogue UI, telephony or a real MIS.
 
-Эти числа не являются точностью распознавания голоса реального пациента. Пользовательское тестирование выявило заметные ошибки; особенно важно проверять ФИО и даты рождения.
-В приложении есть ASR Benchmark: можно записать 20 фраз собственным голосом и сравнить base/small на одинаковых WAV по WER, CER, корректности извлечения полей и задержкам. Транскрипт редактируется; критические действия никогда не выполняются исключительно по неуверенной расшифровке.
-Подробнее: [`docs/voice-quality.md`](docs/voice-quality.md) и [`docs/asr-results.md`](docs/asr-results.md).
-Проверка и тесты
-.\start_windows.bat --check
-.\.venv\Scripts\python.exe -m unittest discover -s tests -v
-.\.venv\Scripts\python.exe scripts/check_voice.py
-.\.venv\Scripts\python.exe scripts/check_ui_e2e.py
-В подготовленной среде разработчика выполнено 123 теста, включая идентификацию, подтверждение, дубли и конкурентность, таймауты, запись → статус → перенос → отмену, опасные обращения, голос и HTTP-обработчики Gradio. Некоторые проверки требуют импортированного Excel и моделей; без них возможен SKIP. Успешные автотесты не заменяют ручной проверки микрофона и звучания TTS.
-Ограничения и безопасность
-- LIVE API организаторов не подключён. RealMIS реализован по документации, но не проверен с настоящим URL, токеном и ID врачей. Никаких реальных операций с МИС в рамках этой версии не выполнялось.
-- Только тестовые пациенты. Нельзя загружать реальные персональные данные, аудиозаписи или секреты в этот репозиторий.
-- Не готова телефония. Перевод оператору — запись в локальную очередь, а не фактическое переключение телефонной линии. SMS и исходящие напоминания не реализованы.
-- Есть ограничения данных. Excel не содержит проверяемых сведений об участках, прикреплении и направлениях. Система не выдумывает их и использует маршрут к сотруднику; для базового демо лучше выбирать хирурга.
-- Нет медицинских консультаций. Система не ставит диагнозы, не назначает лечение и не интерпретирует анализы.
-- Нет публичного веб-сервера. 127.0.0.1:7860 работает только на компьютере, где запущено приложение. Ссылка на GitHub открывает исходники, а не живое демо.
-В .gitignore должны быть исключены .env, SQLite, исходные Excel/CSV, исходные записи голоса, большие модели, логи и резервные копии. Перед публичной публикацией проверьте реально отслеживаемые файлы Git, а не только наличие .gitignore.
-Следующие этапы
-1. Измерить ASR на реальных пользовательских голосовых записях, устранить ошибки дат/имён и сократить задержки.
-2. Проверить GPU-ускорение на RTX 4060; текущий CPU-режим остаётся рабочим резервом.
-3. Добавить и оценить локальную LLM для более свободного диалога, сохранив строгие проверки перед действиями.
-4. После получения доступа подключить живой REST API организаторов, сверить идентификаторы врачей и выполнить контролируемые интеграционные тесты на синтетических данных.
-5. Развивать исходящие напоминания, телефонию, маршрутизацию и аналитику после стабилизации основного сценария.
-Дополнительные материалы
-[Архитектура](docs/architecture.md) · [Контракты](docs/contracts.md) · [API](docs/api-notes.md) · [Сценарий демо](docs/demo_script.md) · [Приёмка](tests/acceptance.md) · [Аналитика](docs/insights.md) · [Экономика](docs/economics.md) · [Текст для чекпоинта](docs/checkpoint_submission.md) · [Прогресс](docs/progress.md)
-Разработано для продуктового кейса ИИ-хакатона. Все пациенты в демонстрации вымышленные; вся работа с расписанием и записями до подключения стенда выполняется локально.
+For an interactive demo, use the quickstart below and the [demo procedure](docs/demo_script.md). The [presentation](docs/presentation/clinic-voice-ai-pitch.pdf) contains the original concept and target figures, not deployment results.
+
+## Implemented features
+
+- A Gradio text/microphone interface with editable transcripts and manual identity/date/slot input.
+- Deterministic dialogue for a small generated schedule, plus a separate case-data flow with synthetic registration, appointment status, move and cancellation.
+- Confirmation before critical dialogue actions. Recognized voice agreement alone cannot authorize registration, booking, move or cancellation.
+- SQLite reservations and uniqueness constraints for pending/confirmed/uncertain slots; moves reserve the target before contacting the adapter. Unknown outcomes retain locks for reconciliation.
+- In-process mock REST operations, strict identity/response checks, local operator incident persistence and rule-based safety routing. Operator transfer is simulated.
+- Lazy faster-whisper ASR, optional local Piper TTS on supported platforms, and Windows SAPI fallback. Text remains available after speech errors.
+
+## Limitations
+
+**No real MIS or telephony integration has been verified.** The UI refuses live mode. The RealMIS adapter has a mutation gate but still needs actual contract, doctor/client mapping and controlled integration tests. It must not be used as a production integration. SMS, outgoing reminders and telephone transfers are not implemented.
+
+Use only fictional identities and authorized synthetic data. The local administrative UI has no production authentication/access-control model; it exposes local demo records. Pending/uncertain operations require human reconciliation; there is no automatic recovery procedure or blind mutation retry. Incident persistence can fall back to process memory, which is lost at shutdown.
+
+The historical ASR comparison used 20 **Piper-generated** WAV files. Its results are not human microphone accuracy. Models/audio, original case Excel and source CSV exports are not included. Hardware speed and historical test results have not been reproduced here. Safety rules and fixture coverage do not establish clinical safety or complete language coverage.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    UI[Local Gradio UI] --> D[Deterministic dialogue]
+    UI --> ASR[faster-whisper]
+    ASR --> Review[Transcript review and consent gate]
+    Review --> D
+    D --> Rules[Safety routing and validation]
+    Rules --> Service[BookingService]
+    Service --> DB[(SQLite reservations)]
+    Service --> Mock[Local MIS simulator]
+    Mock --> DB
+    Service --> Reply[Verified result or uncertainty]
+    Reply --> UI
+    Reply --> TTS[Local Piper / Windows SAPI]
+```
+
+`core/service.py` owns appointment mutations. `core/dialog.py` preserves the small synthetic flow; `core/clinic_dialog.py` handles the case flow. `core/schedule.py` imports schedules, `core/api_simulator.py` provides the mock API, and `core/http_client.py` is a bounded transport with no automatic redirects/retries. [Architecture details](docs/architecture.md) and [contracts](docs/contracts.md) describe these boundaries.
+
+## Quickstart
+
+Target Python: 3.11 or 3.12. Internet access is needed to install packages and explicitly download public speech models. CPU is the default speech device; CUDA is optional. This audit used Python 3.14.7 for the available offline checks; a complete clean installation remains unverified.
+
+Linux/macOS:
+
+```bash
+python3.11 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m pip check
+.venv/bin/python app.py
+```
+
+Windows PowerShell:
+
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip check
+.\.venv\Scripts\python.exe app.py
+```
+
+Open `http://127.0.0.1:7860`. Without a case workbook, the app creates a three-doctor synthetic schedule and demonstrates **new bookings only**. Its legacy flow does not provide case-flow registration, cancellation or move; the service demo above covers those operations independently. No credentials are required for mock mode. `start_windows.bat` installs core/UI requirements and launches text mode; `start_windows.bat --check` runs the tests, whose full requirements are listed below.
+
+Configuration comes from process environment variables; `.env.example` documents them but `.env` files are **not loaded automatically**. Set variables in the shell (`export NAME=value` in Bash, `$env:NAME="value"` in PowerShell). Keep `MIS_MODE=mock`. ASR defaults to cached models only; `ASR_LOCAL_ONLY=1` prevents implicit model downloads.
+
+Optional speech (use the virtual-environment Python executable):
+
+```bash
+python -m pip install -r requirements-voice.txt -r requirements-tts.txt
+python scripts/download_asr_small.py
+python -m piper.download_voices ru_RU-irina-medium --data-dir data/models
+python app.py
+```
+
+`ASR_DEVICE=cpu` uses int8. `TTS_ENGINE=piper` selects the downloaded local voice; `auto` tries Piper and then SAPI on Windows; `DISABLE_TTS=1` disables speech output. Model and voice downloads, microphone capture, audibility and real ASR remain unverified in the current restricted environment. Review upstream model/voice terms before redistribution.
+
+### Optional case workbook
+
+Only use an authorized synthetic copy. Place exactly one workbook in `data/source/` with the seven sheets described in [contracts](docs/contracts.md), then run:
+
+```bash
+python scripts/import_clinic.py
+python app.py
+```
+
+The importer uses a separate `data/clinic_demo.sqlite3`, stores source hash/provenance and rejects replacing populated data with a different workbook. Availability uses GMT+4, a 14-calendar-day horizon including today, same-day 30-minute lead time, working calendar and absence rules. It never invents expired slots. The original case workbook is absent; historical doctor/slot counts are not reproduced audit results. See [API notes](docs/api-notes.md) for mock boundaries.
+
+## Verification
+
+```bash
+python -m pip install -r requirements.txt -r requirements-voice.txt -r requirements-dev.txt
+python -m pip check
+python -m unittest discover -s tests -v
+python scripts/demo_local.py
+python scripts/smoke_local.py
+python -m ruff check .
+python scripts/check_format.py
+python -m bandit -r core app.py -lll
+python -m pip_audit --progress-spinner off
+```
+
+ASR preprocessing tests need NumPy, PyAV and faster-whisper from the voice dependency group; model-backed tests skip without local models. Case integration tests need the authorized workbook/imported DB. HTTP tests need loopback sockets. Tests are not disabled to accommodate the audit environment.
+
+**Current full discovery: 48 passed, 0 assertion failures, 11 errors, 13 skips.** The errors are missing dependencies/imports and a denied socket, so this is not a successful full-suite result. The original claim of 123 passing tests has not been reproduced. Details, baseline comparison and exact dependency availability: [verification](docs/verification.md), [machine-readable result](docs/verification-results.json).
+
+CI is configured for Windows/Linux Python 3.11/3.12, with separate dependency/security checks. YAML is locally parsed; remote jobs, Ruff, Bandit and dependency advisories have not run here. No passing CI badge or vulnerability-free claim is made.
+
+## Design decisions
+
+Appointment actions follow a deterministic controller rather than unconstrained LLM tool calls. Structured fields are checked against actual local slots, a fresh summary requires explicit consent, and service mutations enforce ownership and reservation rules. This makes refusals, timeouts and conflicts reproducible in tests.
+
+The tradeoff is limited language coverage and more clarification turns. `core/understanding.py` supports an optional validated, loopback-only Ollama parser; it cannot execute mutations and falls back to deterministic extraction on errors. Actual LLM inference has not been validated. Alternatives include a larger intent parser or LLM-assisted field extraction, while retaining the same service/consent boundary. Giving an LLM direct scheduling authority would require a different safety and evaluation model.
+
+SQLite `BEGIN IMMEDIATE` and partial unique indexes coordinate writers using the same database file. They do not prevent independent real-MIS clients from booking a slot. The HTTP budget is process-local, shared across reads/writes; a timeout does not prove a mutation failed. Unknown create/cancel/move outcomes remain blocked rather than being retried automatically.
+
+## Documentation and provenance
+
+- [Reproducible demo procedure](docs/demo_script.md)
+- [Verification and remaining blockers](docs/verification.md)
+- [Contracts](docs/contracts.md) · [Architecture](docs/architecture.md) · [API notes](docs/api-notes.md)
+- [Synthetic ASR results](docs/asr-results.md) · [Voice quality](docs/voice-quality.md)
+- [Historical AI-assisted development records](docs/provenance/README.md)
+
+The development missions and original author-supplied evidence are retained. AI involvement and existing Git history have not been removed. No project license is present; the owner must choose/confirm licensing before treating this as a reusable public distribution. Dependencies, models, voices and case material have separate terms.

@@ -40,14 +40,14 @@ def analyze(calls_path,visits_path):
     visits=sum(statuses.values());no_show=statuses['Неявка'];completed=statuses['Состоялся']
     return {'calls':{'total':total,'missed':missed,'missed_share':missed/total if total else 0,
                      'hourly':dict(sorted(hourly.items())),'missed_hourly':dict(sorted(missed_hourly.items())),
-                     'results':dict(results),'peak_hour':max(hourly,key=hourly.get),'peak_count':max(hourly.values()),
+                     'results':dict(results),'peak_hour':max(hourly,key=hourly.get) if hourly else None,'peak_count':max(hourly.values(),default=0),
                      'mean_wait_answered_seconds':sum(waits)/len(waits) if waits else None,
                      'mean_duration_answered_seconds':sum(durations)/len(durations) if durations else None,
-                     'period':[min(call_dates).isoformat(),max(call_dates).isoformat()]},
+                     'period':[min(call_dates).isoformat(),max(call_dates).isoformat()] if call_dates else []},
             'visits':{'total':visits,'statuses':dict(statuses),'no_show_share_all':no_show/visits if visits else 0,
                       'no_show_share_completed_or_missed':no_show/(completed+no_show) if completed+no_show else 0,
                       'specialties':{k:dict(v) for k,v in sorted(specialties.items())},
-                      'period':[min(visit_dates).date().isoformat(),max(visit_dates).date().isoformat()]}}
+                      'period':[min(visit_dates).date().isoformat(),max(visit_dates).date().isoformat()] if visit_dates else []}}
 
 
 def chart(values,target,title):

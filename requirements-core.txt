@@ -1,0 +1,4 @@
+# Direct imports used by schedule parsing and deterministic dialogue.
+openpyxl==3.1.5
+pydantic>=2.11,<3
+defusedxml==0.7.1

@@ -21,7 +21,7 @@ from urllib.request import Request, build_opener, HTTPRedirectHandler
 
 class RateLimiter:
     def __init__(self, limit=8, window=60.0, clock=time.monotonic):
-        if not 1 <= limit <= 10 or window < 60:
+        if type(limit) is not int or not 1 <= limit <= 10 or not math.isfinite(window) or window < 60:
             raise ValueError('Limit must be 1..10 calls per >=60 seconds')
         self.limit, self.window, self.clock = limit, window, clock
         self.calls = deque()
@@ -84,7 +84,7 @@ class HTTPClient:
             raise ValueError('Invalid API base URL; credentials in URLs are prohibited')
         if parsed.scheme != 'https' and parsed.hostname not in ('127.0.0.1', 'localhost', '::1'):
             raise ValueError('Only local fixtures may use HTTP')
-        if timeout <= 0:
+        if not math.isfinite(timeout) or timeout <= 0:
             raise ValueError('Timeout must be positive')
         self.base_url = base_url.rstrip('/')
         self.headers = dict(headers or {})  # actual auth format supplied only after OpenAPI

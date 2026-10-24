@@ -1,5 +1,7 @@
 # Локальная регистратура — описание для сдачи
 
+> Historical author-supplied record. Performance, test counts and device checks below were not reproduced in the 2026-10-24 audit. See [current verification](verification.md) for actual results and blockers.
+
 Локальный MVP с реальными исходными данными кейса клиники и адаптером под REST API
 стенда; интеграционный тест живого стенда ожидает доступа. Все операции пока MOCK,
 пациенты только синтетические. Excel сам описывает графики/статусы как данные хакатона.

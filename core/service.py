@@ -244,12 +244,14 @@ class BookingService:
         if row['status'] in ('pending','uncertain'): return Result('uncertain',message='Нужна сверка сотрудником')
         try: response=self.mis.status(row['external_id'])
         except Exception: return Result('uncertain',message='Статус не проверен')
-        data=response.data
-        if response.kind!='response' or response.status!=200 or not isinstance(data,dict):
+        data=getattr(response, 'data', None)
+        if getattr(response, 'kind', None)!='response' or getattr(response, 'status', None)!=200 or not isinstance(data,dict):
             return Result('uncertain',message='Статус не проверен')
         if str(data.get('id'))!=str(row['external_id']) or data.get('scheduled_at')!=datetime.fromisoformat(row['start_at']).strftime('%d.%m.%Y %H:%M'):
             return Result('uncertain',message='Запись требует сверки')
-        if data.get('client_id')!=self.mis.client_id(full_name,parse_birthdate(birthdate)) or data.get('doctor',{}).get('id')!=self.mis.doctor_map.get(row['doctor_id']):
+        if (not isinstance(data.get('doctor'), dict)
+                or data.get('client_id')!=client
+                or data['doctor'].get('id')!=self.mis.doctor_map.get(row['doctor_id'])):
             return Result('uncertain',message='Пациент или врач не подтверждены ответом API')
         if data.get('status') not in ('Запланирована','Отменена','Завершена'):
             return Result('uncertain',message='Неизвестный статус')

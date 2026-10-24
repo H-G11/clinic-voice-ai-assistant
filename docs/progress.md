@@ -1,5 +1,7 @@
 # Progress — 15.10.2026
 
+> Historical author-supplied record. Performance, test counts and device checks below were not reproduced in the 2026-10-24 audit. See [current verification](verification.md) for actual results and blockers.
+
 ## Voice quality & natural dialogue — актуальная миссия
 - Прочитано новое задание. Владелец ответил, что размеченных записей его голоса нет. Реальное улучшение качества на его голосе НЕ заявляется.
 - Откат: `backups/voice-quality-20261015-105814` содержит исходный код, тесты, документы и снимки обеих SQLite. Baseline: **101 PASS, 31,587 с**, `data/voice-quality-baseline.log`.
