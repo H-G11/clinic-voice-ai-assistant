@@ -38,4 +38,6 @@ Offline secret/credential/PII pattern scanning covered all 4 original reachable 
 
 Four binary blobs (aggregate PNGs and the presentation) require separate manual content/licensing review. PDF text was checked locally by the workspace audit; no credential/email/phone pattern matches were found. This does not establish image-level privacy or redistribution rights. Author metadata was preserved, not published in audit reports. Raw case files, patient/audio databases and secrets remain excluded. An explicit project license and permission to redistribute original case-derived presentation/assets remain owner decisions; no license was invented.
 
+The existing `python scripts/audit_publication.py` gate was also executed: exit 1, two `unexpected_binary` findings (`docs/presentation/clinic-voice-ai-pitch.pdf` and `docs/presentation/cover.png`). These retained presentation assets are not approved by its narrow binary allowlist. The gate was not weakened to hide them. Publication stays blocked until their content/rights are reviewed and an explicit asset policy is recorded; they were not deleted or replaced.
+
 Full dependency vulnerability scanning and remote CI remain blocked. Do not call the prototype production-ready or connect real patient systems based on these checks.
