@@ -52,6 +52,15 @@ def normalized(text: str) -> str:
     return re.sub(r"\s+", " ", text.lower().replace("ё", "е").strip())
 
 
+def is_booking_abort(text: str) -> bool:
+    """Recognize explicit draft refusal without confusing it with call recording."""
+    value = normalized(text).strip(' .!?')
+    return bool(re.fullmatch(
+        r'(?:я )?передумал[аи]?|не хочу записываться|не надо записывать'
+        r'|не записывайте(?: меня)?(?: к врачу| на прием)?|стоп', value,
+    ))
+
+
 def _words_number(value: str) -> int | None:
     words = value.split()
     if len(words) == 1:

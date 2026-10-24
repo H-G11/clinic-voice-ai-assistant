@@ -5,7 +5,7 @@ from datetime import date,datetime
 from typing import Literal
 from urllib.request import Request,build_opener,ProxyHandler,HTTPRedirectHandler
 from pydantic import BaseModel,ConfigDict,Field
-from .parse_ru import normalized,parse_day,parse_time,DIGITS,_words_number
+from .parse_ru import normalized,parse_day,parse_time,DIGITS,_words_number,is_booking_abort
 
 
 class Meaning(BaseModel):
@@ -55,7 +55,7 @@ def deterministic(text,today,anchor_day=None):
         m=re.search(r'\b(?:[01]?\d|2[0-3]):[0-5]\d\b|\bв\s+(?:[а-я]+|\d{1,2})\s+час\w*(?:\s+дня|\s+утра|\s+вечера)?',positive)
         if m:clock=parse_time(m.group())
     return Meaning(intent=action,day=day,period=period,after=after,time=clock,choice=choice,
-                   abort=bool(re.fullmatch(r'(?:я )?передумал[аи]?|не хочу записываться|не надо записывать|не записывайте|стоп',s)),
+                   abort=is_booking_abort(s),
                    room=bool(re.search(r'какой кабинет|каком кабинете|номер кабинета',s)))
 
 

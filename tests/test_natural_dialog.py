@@ -109,6 +109,10 @@ class TestNaturalDialog(unittest.TestCase):
 
 
 class TestValidatedUnderstanding(unittest.TestCase):
+    def test_explicit_booking_refusal_is_abort_not_recording_control(self):
+        self.assertTrue(understand('не записывайте меня', date(2026, 10, 15)).abort)
+        self.assertFalse(understand('не записывайте разговор', date(2026, 10, 15)).abort)
+
     def test_llm_timeout_and_invalid_json_fall_back(self):
         for response in (TimeoutError(),'{bad json','{"time":"99:90"}','{"execute_booking":true}'):
             def provider(*args):

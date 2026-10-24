@@ -5,7 +5,7 @@ Environment: Linux x86_64, CPython 3.14.7. This is not the original Windows deve
 | Check | Actual result |
 | --- | --- |
 | Original full discovery before changes | 56 discovered/run, 30 passed, 2 assertion failures, 11 errors, 13 skips |
-| Current full discovery | 72 discovered/run, 48 passed, 0 assertion failures, 11 errors, 13 skips |
+| Current full discovery | 72 discovered/run, 50 passed, 0 assertion failures, 11 errors, 13 skips |
 | New SQLite service safeguard tests | 13 passed; real in-process mock adapter, no Excel or sockets |
 | Voice tests (existing + portable regressions) | 6 passed, 2 existing skips (Windows SAPI / real Piper model) |
 | `python scripts/demo_local.py` | Passed; actual output in demo-service.json |
@@ -19,7 +19,7 @@ Environment: Linux x86_64, CPython 3.14.7. This is not the original Windows deve
 
 Eight module-import errors stem from missing openpyxl (and further Pydantic/Gradio dependencies will be required once imports progress). Two ASR preprocessing errors require NumPy/voice dependencies; one simulator HTTP test cannot create sockets: total 11. Do not interpret missing modules as passing or silently skip them.
 
-The source originally defines 123 `test_*` methods. Static counting is not a test run; unavailable imports prevent complete discovery. The edited tree defines 139 methods after 16 additional regressions. The earlier statement of 123 PASS remains historical and unverified in this environment. Existing Excel/model-dependent skips were preserved.
+The source originally defines 123 `test_*` methods. Static counting is not a test run; unavailable imports prevent complete discovery. The edited tree defines 142 methods after 19 additional regressions. The earlier statement of 123 PASS remains historical and unverified in this environment. Existing Excel/model-dependent skips were preserved.
 
 ## Confirmed fixes
 
@@ -28,6 +28,7 @@ The source originally defines 123 `test_*` methods. Static counting is not a tes
 - Malformed/unknown mutation responses remain uncertain. A registration whose patronymic conflicts with the returned existing card retains its reconciliation guard instead of permitting another POST.
 - Malformed doctor/status payloads produce uncertainty without releasing reservations; status verification uses the already identified client instead of an extra lookup.
 - An ambiguous directory containing multiple case workbooks is rejected instead of silently choosing one.
+- Explicit booking refusal (including «не записывайте меня») invalidates the draft rather than being mistaken for recording control. The UI no longer claims to disable call recording through an unused state flag. Two dependency-free regressions passed; the Pydantic case-flow regression remains blocked with the rest of that module.
 - Empty historical CSV exports no longer crash aggregate calculation or invent a peak/period.
 - Pydantic is an explicit core dependency; XML hardening is included; speech requirements no longer duplicate the Piper dependency. Full lock resolution is blocked.
 - Windows setup no longer relies on a stale `.deps_installed` sentinel or runs resource-dependent tests on every normal UI launch.

@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 from datetime import date, datetime
 from .service import BookingService
-from .parse_ru import parse_day, parse_time, parse_birthdate
+from .parse_ru import parse_day, parse_time, parse_birthdate, is_booking_abort
 from .safety import handoff, HANDOFF_MESSAGE
 
 SPECIALTIES = {
@@ -137,6 +137,8 @@ def reply(message: str, state: dict | None, svc: BookingService) -> tuple[str, d
         fresh = new_state()
         fresh['step'] = 'specialty'
         return "Начнём заново. К какому специалисту вас записать?", fresh
+    if s.get('step') not in ('start', 'done') and is_booking_abort(t):
+        return "Запись не создана. Можно начать заново.", new_state()
     if s.get("step") in ("start", "done"):
         if any(x in norm for x in ("отменить запись", "перенести", "статус записи")):
             return ("Сейчас проверена только новая запись. Перенос и отмена ещё в разработке. "

@@ -115,7 +115,7 @@ python -m pip_audit --progress-spinner off
 
 ASR preprocessing tests need NumPy, PyAV and faster-whisper from the voice dependency group; model-backed tests skip without local models. Case integration tests need the authorized workbook/imported DB. HTTP tests need loopback sockets. Tests are not disabled to accommodate the audit environment.
 
-**Current full discovery: 48 passed, 0 assertion failures, 11 errors, 13 skips.** The errors are missing dependencies/imports and a denied socket, so this is not a successful full-suite result. The original claim of 123 passing tests has not been reproduced. Details, baseline comparison and exact dependency availability: [verification](docs/verification.md), [machine-readable result](docs/verification-results.json).
+**Current full discovery: 50 passed, 0 assertion failures, 11 errors, 13 skips.** The errors are missing dependencies/imports and a denied socket, so this is not a successful full-suite result. The original claim of 123 passing tests has not been reproduced. Details, baseline comparison and exact dependency availability: [verification](docs/verification.md), [machine-readable result](docs/verification-results.json).
 
 CI is configured for Windows/Linux Python 3.11/3.12, with separate dependency/security checks. YAML is locally parsed; remote jobs, Ruff, Bandit and dependency advisories have not run here. No passing CI badge or vulnerability-free claim is made.
 

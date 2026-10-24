@@ -80,3 +80,5 @@ Piper integration follows the [official Python API](https://github.com/OHF-Voice
 - `booking_status` compares response client ID to the identity already resolved for this request; it does not make a second identity API call.
 - Multiple source workbooks are rejected as ambiguous. `.env.example` documents process variables; `.env` is not loaded automatically.
 - `scripts/demo_local.py` is an isolated, generated synthetic service/simulator demo, not a case import or voice evaluation. Its fixed clock is fixture-local.
+
+- Explicit booking refusal invalidates the pending draft in both dialogue flows. Call-recording requests do not masquerade as booking consent/refusal, and the prototype does not claim an implemented call-recording toggle.
