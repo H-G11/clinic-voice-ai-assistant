@@ -27,6 +27,7 @@
 Аналитика	Обезличенные агрегаты исторических звонков и приёмов
 Автоматическая проверка	123 теста PASS в подготовленном окружении разработчика и HTTP-проверка Gradio
 
+<img width="1247" height="931" alt="UAtYbnk-IkWEKm6kao3SbsPCthlWFuO5uc0RlsAAlrToUtsgeESisNEjF8g2Cl7UQVOUiLTX0uc70YQYccU-rInR2c4bM2lxM6Rp76Lsz73H66FPZgMYl8XDg2bcjXyvRwhv7VUKBxgQ3SzBRlXYRVuldJL_U_vppBPuF9rz0gRASrO0Ln83HbZObIMtjXrW" src="https://github.com/user-attachments/assets/d1b12deb-941a-4ac5-98aa-b7d68b593ca8" />
 
 Данные кейса: 17 772 исторических звонка и 35 470 приёмов. Это исходные данные для анализа нагрузки, не результаты внедрения ассистента.
 Как выглядит демонстрация
